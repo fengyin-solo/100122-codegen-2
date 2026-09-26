@@ -5,7 +5,7 @@
 """
 from __future__ import annotations
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
@@ -33,6 +33,9 @@ def health() -> dict[str, object]:
 
 
 @app.get("/api/overview")
-def overview() -> dict[str, object]:
-    """运营概览：把各业务模块的待处理量汇总成看板卡片。"""
-    return store.overview()
+def overview(range: str = Query(default="30d", description="统计区间：today、7d、30d、all")) -> dict[str, object]:
+    """运营概览：按统计区间把各业务模块的待处理量、异常量汇总成可下钻的看板。"""
+    try:
+        return store.overview(range)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
